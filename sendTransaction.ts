@@ -61,10 +61,10 @@ export const sendTransaction = async (loopAmount: number) => {
         fee,
         memo
       );
-      console.log(`⛄${'\x1b[32m]'}${"[SUCCESS]"} 🎄[ACCOUNT]: ${selfAccount}  🤶[Nonce]: ${i}  🦌[HASH]: ${explorer}${resp.transactionHash}`);
+      console.log(`⛄${"\x1b[32m"}${"[SUCCESS]"} 🎄[ACCOUNT]: ${selfAccount}  🤶[Nonce]: ${i}  🦌[HASH]: ${explorer}${resp.transactionHash}`);
     } catch (err) {
       // Sleep 1 second
-      console.log(`⛄${'\x1b[31m]'}${"[FAILED]"} 🎄[ACCOUNT]: ${selfAccount}  🤶[Nonce]: ${i} [REASON]: ${err}`);
+      console.log(`⛄${"\x1b[31m"}${"[FAILED]"} 🎄[ACCOUNT]: ${selfAccount}  🤶[Nonce]: ${i} [REASON]: ${err}`);
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
