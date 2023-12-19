@@ -3,15 +3,17 @@ import { calculateFee, coins } from "@cosmjs/stargate";
 import * as dotenv from "dotenv";
 import { ComsmosSDKBuildRpcConnector, InitializeNetworkPayload, SupportNetwork } from "./universalNetwork";
 import { msgFromBase64 } from "./constant";
+import chalk from 'chalk';
 
 dotenv.config();
+const DEFAULT_MINT_AMOUNT = 100;
 
 export interface WalletData  {
     walletAddress:  string;
     balance:    string;
 }
 
-export const sendTransaction = async () => {
+export const sendTransaction = async (loopAmount: number) => {
   const process = readConfig();
 
   const selfWallet = await DirectSecp256k1Wallet.fromKey(
@@ -20,7 +22,7 @@ export const sendTransaction = async () => {
       "hex"), 
       process.publicConfig.networkName,
   );
-  console.log(process.publicConfig.networkName);
+
   const [ account ] = await selfWallet.getAccounts();
   const selfAccount = process.privateConfig.walletWithAccount ? process.privateConfig.walletWithAccount : account.address;
 
@@ -48,31 +50,36 @@ export const sendTransaction = async () => {
       process.brc20ProtocolConfig.brc20MsgTick as string,
       process.brc20ProtocolConfig.brc20MsgAmt as string,
     );
-
-  console.log(selfAccount, sendAmount, memo, fee)
-  try {
-    const resp = await clientInstance.sendTokens(
-      selfAccount,
-      selfAccount,
-      sendAmount,
-      fee,
-      memo
-    );
-    console.log(resp.transactionHash);
-  } catch (err) {
-    // Sleep 1 second
-    console.log("Error", err);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  const explorer = process.publicConfig.networkExplorer;
+  for (let i = 0; i < loopAmount; ++i) {
+    try {
+      const resp = await clientInstance.sendTokens(
+        selfAccount,
+        selfAccount,
+        sendAmount,
+        fee,
+        memo
+      );
+      console.log(`⛄${'\x1b[32m]'}${"[SUCCESS]"} 🎄[ACCOUNT]: ${selfAccount}  🤶[Nonce]: ${i}  🦌[HASH]: ${explorer}${resp.transactionHash}`);
+    } catch (err) {
+      // Sleep 1 second
+      console.log(`⛄${'\x1b[31m]'}${"[FAILED]"} 🎄[ACCOUNT]: ${selfAccount}  🤶[Nonce]: ${i} [REASON]: ${err}`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
   }
 }
 
-const mulitSendTransactions = async () => {}
+const mulitSendTransactions = async () => {
+
+}
 
 
 const readConfig = () => {
   const cosmosSdkBuildNetworkName = process.env.COSMOS_SDK_BUILD_NETWORK_NAME;
   const cosmosSdkBuildNetworkRpc = process.env.COSMOS_SDK_BUILD_NETWORK_RPC;
   const cosmosSdkBuildNetworkTicket = process.env.COSMOS_SDK_BUILD_NETWORK_TICKET;
+  const cosmosSdkBuildNetworkExplorer = process.env.COSMOS_SDK_BUILD_NETWORK_EXPLORER;
 
   const cosmosSdkBuildNetworkGasFee = process.env.COSMOS_SDK_BUILD_NETWORK_GAS_FEE;
   const cosmosSdkBuildNetworkGasPrice = process.env.COSMOS_SDK_BUILD_NETWORK_GAS_PRICE;
@@ -95,6 +102,7 @@ const readConfig = () => {
       networkName: cosmosSdkBuildNetworkName,
       networkRpc: cosmosSdkBuildNetworkRpc,
       networkTicket: cosmosSdkBuildNetworkTicket,
+      networkExplorer: cosmosSdkBuildNetworkExplorer,
       networkGasFee: cosmosSdkBuildNetworkGasFee,
       networkGasPrice: cosmosSdkBuildNetworkGasPrice,
       networkGasLimit: cosmosSdkBuildNetworkGasLimit,
@@ -132,4 +140,17 @@ function getSupportNetworkFromEnv(envValue: string): SupportNetwork {
   }
 }
 
-sendTransaction();
+
+const consoleAsciiTitle = `
+##################################################################################################
+#    :::    ::: ::::::::::: :::::::: ::::::::::: ::::::::  :::::::::  :::::::::::     :::        #
+#    :+:    :+:     :+:    :+:    :+:    :+:    :+:    :+: :+:    :+:     :+:       :+: :+:      #
+#    +:+    +:+     +:+    +:+           +:+    +:+    +:+ +:+    +:+     +:+      +:+   +:+     #
+#    +#++:++#++     +#+    +#++:++#++    +#+    +#+    +:+ +#++:++#:      +#+     +#++:++#++:    #
+#    +#+    +#+     +#+           +#+    +#+    +#+    +#+ +#+    +#+     +#+     +#+     +#+    #
+#    #+#    #+#     #+#    #+#    #+#    #+#    #+#    #+# #+#    #+#     #+#     #+#     #+#    #
+#    ###    ### ########### ########     ###     ########  ###    ### ########### ###     ###    #
+##################################################################################################
+`;
+console.log(consoleAsciiTitle);
+sendTransaction(process.env.WALLET_MINT_AMOUNT ? process.env.WALLET_MINT_AMOUNT as unknown as number : DEFAULT_MINT_AMOUNT);
