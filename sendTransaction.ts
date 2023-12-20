@@ -153,4 +153,4 @@ const consoleAsciiTitle = `
 ##################################################################################################
 `;
 console.log(consoleAsciiTitle);
-sendTransaction(process.env.WALLET_MINT_AMOUNT ? process.env.WALLET_MINT_AMOUNT as unknown as number : DEFAULT_MINT_AMOUNT);
+sendTransaction(process.env.EXECUTE_AMOUNT  ? process.env.EXECUTE_AMOUNT  as unknown as number : DEFAULT_MINT_AMOUNT);
